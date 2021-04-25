@@ -60,7 +60,7 @@ def eval_epoch(model, loader, criterion, meter, device, epoch):
     model.eval()
 
     with torch.no_grad():
-        for data in loader:
+        for step, data in enumerate(loader):
             images, targets = data 
             images = images.to(device)
             targets = targets.to(device).float()
