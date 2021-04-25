@@ -7,7 +7,7 @@ from vit_pytorch.modules import ViT, build_head
 from vit_pytorch.data import create_loaders
 from vit_pytorch.configs import MODEL_CFGS
 from vit_pytorch.utils import set_seed, get_num_params, freeze_model, Meter, mkdir
-from vit_pytorch.solver import train_epoch, eval_epoch, get_criterion, get_optimizer, get_scheduler
+from vit_pytorch.solver import train_epoch, eval_epoch, get_criterion, get_optimizer, get_scheduler, WarmupScheduler
 
 
 def main(args):
@@ -56,8 +56,22 @@ def main(args):
     # init meters
     train_meter = Meter()
     valid_meter = Meter() if valid_loader is not None else None
+
+    # output dir
+    output_dir = args.output_dir
+
+    if output_dir is None:
+        output_dir = os.path.join(
+            'results', 
+            datetime.now().strftime('result_%Y-%m-%d-%H-%M')
+        )
+
+    mkdir(output_dir)
         
     # training
+    best_score = 0
+    not_improve_cnt = 0
+
     print('Start training.')
     for epoch in range(args.max_epoch):
         train_epoch(model, train_loader, criterion, optimizer, train_meter, args.device, epoch + 1)
@@ -65,17 +79,23 @@ def main(args):
         if valid_loader is not None:
             eval_epoch(model, valid_loader, criterion, valid_meter, args.device, epoch + 1)
 
+        if valid_meter is not None:
+            if valid_meter['acc'][-1] > best_score:
+                print('Validation acc has improved from `%.6f` to `%.6f`' %(valid_meter['acc'][-1], best_score))
+                weights_path = os.path.join(output_dir, 'improved_ep{}.pt'.format(str(epoch + 1)))
+                torch.save(model.state_dict(), weights_path)
+                best_score = valid_meter['acc'][-1]
+                not_improve_cnt = 0
+            else:
+                not_improve_cnt += 1
+                print('No improved count : {}/{}'.format(not_improve_cnt, args.patient))
         
-
+        if args.patient is not None:
+            if not_improve_cnt >= args.patient:
+                print('Early stop at epoch {}'.format(not_improve_cnt))
+                break
+                
     # save results 
-    output_dir = args.output_dir
-
-    if output_dir is None:
-        output_dir = os.path.join('results', 
-                                  datetime.now().strftime('result_%Y-%m-%d-%H-%M'))
-
-    mkdir(output_dir)
-
     try:
         weights_path = os.path.join(output_dir, 'weights.pt')
         torch.save(model.state_dict(), weights_path)
@@ -123,6 +143,7 @@ if __name__ == '__main__':
     argparser.add_argument('--beta1', type=float, help='Adam `betas` param 1.', default=0.9)
     argparser.add_argument('--beta2', type=float, help='Adam `betas` param 2.', default=0.999)   
     argparser.add_argument('--max_epoch', type=int, help='Maximun training epochs.', default=100)
+    argparser.add_argument('--patient', type=int, help='Improved patient for early stopping', default=None)
     argparser.add_argument('--warmup', type=int, help='Warmup epochs.', default=0)
     argparser.add_argument('--scheduler', type=str, help='Training scheduler.', choices=['cosine, step, exp'], default=None)
     argparser.add_argument('--t_max', type=int, help='Maximum number of iterations (cosine).', default=None)
@@ -141,4 +162,3 @@ if __name__ == '__main__':
      
     args = argparser.parse_args()
     main(args)
-    
