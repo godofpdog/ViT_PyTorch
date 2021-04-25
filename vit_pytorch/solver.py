@@ -63,11 +63,12 @@ def eval_epoch(model, loader, criterion, meter, device, epoch):
         for data in loader:
             images, targets = data 
             images = images.to(device)
-            targets = targets.to(device)
+            targets = targets.to(device).float()
+            targets = targets.unsqueeze(-1)
             outputs = model(images)
             loss = criterion(outputs, targets)
             _show_result(epoch, step, len(loader), loss.item(), acc, False)
-            _update_meter(meter, loss, acc)
+            _update_meter(meter, loss.item(), acc)
 
     return None 
 

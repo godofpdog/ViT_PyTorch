@@ -10,6 +10,9 @@ from vit_pytorch.utils import set_seed, get_num_params, freeze_model, Meter, mkd
 from vit_pytorch.solver import train_epoch, eval_epoch, get_criterion, get_optimizer, get_scheduler, WarmupScheduler
 
 
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
 def main(args):
     set_seed(args.random_seed)
 
@@ -62,7 +65,7 @@ def main(args):
 
     if output_dir is None:
         output_dir = os.path.join(
-            'results', 
+            ROOT_DIR, 'results', 
             datetime.now().strftime('result_%Y-%m-%d-%H-%M')
         )
 
