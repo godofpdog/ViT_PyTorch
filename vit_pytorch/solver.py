@@ -127,4 +127,4 @@ def get_scheduler(optimizer, args):
         else:
             raise ValueError('Invalid scheduler.')
     else:
-        return ConstantScheduler()
+        return ConstantScheduler(optimizer)
