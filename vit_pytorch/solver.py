@@ -107,7 +107,7 @@ class WarmupScheduler(LambdaLR):
 
 
 class ConstantScheduler(LambdaLR):
-    def __init__(optimizer, last_epoch=-1):
+    def __init__(self, optimizer, last_epoch=-1):
         super(ConstantScheduler, self).__init__(optimizer, 
                                                 self.lr_lambda,
                                                 last_epoch=last_epoch)
