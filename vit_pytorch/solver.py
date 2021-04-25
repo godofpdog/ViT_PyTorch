@@ -67,6 +67,7 @@ def eval_epoch(model, loader, criterion, meter, device, epoch):
             targets = targets.unsqueeze(-1)
             outputs = model(images)
             loss = criterion(outputs, targets)
+            acc = calc_accuracy(outputs, targets)
             _show_result(epoch, step, len(loader), loss.item(), acc, False)
             _update_meter(meter, loss.item(), acc)
 
