@@ -50,7 +50,7 @@ def main(args):
 
     # get optimizer and schedulers
     optimizer = get_optimizer(model, args) 
-    warmup_scheduler = WarmupScheduler(args.warmup)
+    warmup_scheduler = WarmupScheduler(optimizer, args.warmup)
     training_scheduler = get_scheduler(optimizer, args)
 
     # init meters
