@@ -90,7 +90,7 @@ def main(args):
             valid_meter.merge(_meter_v)
 
         if valid_meter is not None and early_stopper is not None:
-            early_stopper.step(_meter_v[args.monitor])
+            early_stopper.step(np.mean(_meter_v[args.monitor]))
 
             if early_stopper.is_best and args.save_best:
                 weights_path = os.path.join(output_dir, 'improved_ep{}.pt'.format(str(epoch + 1)))
