@@ -161,18 +161,15 @@ class EarlyStopper:
             self._is_stop = True
 
     def _is_improved(self, metric):
-        if self._best_metric is None:
-            self._best_metric = metric
-            _is_improved = True
+        if self.monitor == 'acc':
+            _is_improved = metric > self._best_metric + self.min_delta
         else:
-            if self.monitor == 'acc':
-                _is_improved = metric > self._best_metric + self.min_delta
-            else:
-                _is_improved = metric < self._best_metric - self.min_delta
+            _is_improved = metric < self._best_metric - self.min_delta
             
         if _is_improved:
             print('Monitored metric `%s` has improved from `%.6f` to `%.6f`' 
                 %(self.monitor, self._best_metric, metric))
+            self._best_metric = metric
 
         return _is_improved
 
