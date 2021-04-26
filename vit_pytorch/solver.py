@@ -2,12 +2,13 @@ import math
 import torch
 import numpy as np 
 from .utils import to_numpy
+from torch import sigmoid
 from torch.optim.lr_scheduler import LambdaLR, CosineAnnealingLR, ExponentialLR, StepLR
 
 
 def calc_accuracy(outputs, targets):
     if outputs.size(1) == 1:
-        preds = (outputs > 0.5) * 1
+        preds = (sigmoid(outputs) > 0.5) * 1
     else:
         preds = outputs.argmax(-1)
 
@@ -52,7 +53,7 @@ def train_epoch(model, loader, criterion, optimizer, meter, device, epoch):
         _show_result(epoch, step, len(loader), loss.item(), acc, True)
         _update_meter(meter, loss.item(), acc)
 
-    return None 
+    return meter 
 
 
 def eval_epoch(model, loader, criterion, meter, device, epoch):
@@ -71,7 +72,7 @@ def eval_epoch(model, loader, criterion, meter, device, epoch):
             _show_result(epoch, step, len(loader), loss.item(), acc, False)
             _update_meter(meter, loss.item(), acc)
 
-    return None 
+    return meter 
 
 
 def _show_result(epoch, step, total_batch, loss, acc, is_train):
@@ -130,3 +131,59 @@ def get_scheduler(optimizer, args):
             raise ValueError('Invalid scheduler.')
     else:
         return ConstantScheduler(optimizer)
+
+
+class EarlyStopper:
+    def __init__(self, monitor, patient, min_delta=0):
+        assert monitor in ('acc', 'loss')
+
+        if monitor == 'loss':
+            self._best_metric = np.Inf
+        else:
+            self._best_metric = -np.Inf
+
+        self.monitor = monitor
+        self.patient = patient
+        self.min_delta = min_delta
+        self._not_improved_cnt = 0 
+        self._is_best = False 
+        self._is_stop = False
+
+    def step(self, metric):
+        if self._is_improved(metric):
+            self._is_best = True 
+            self._not_improved_cnt = 0
+        else:
+            self._is_best = False
+            self._not_improved_cnt += 1
+        
+        if self._not_improved_cnt >= self.patient:
+            self._is_stop = True
+
+    def _is_improved(self, metric):
+        if self._best_metric is None:
+            self._best_metric = metric
+            _is_improved = True
+        else:
+            if self.monitor == 'acc':
+                _is_improved = metric > self._best_metric + self.min_delta
+            else:
+                _is_improved = metric < self._best_metric - self.min_delta
+            
+        if _is_improved:
+            print('Monitored metric `%s` has improved from `%.6f` to `%.6f`' 
+                %(self.monitor, self._best_metric, metric))
+
+        return _is_improved
+
+    @property
+    def is_best(self):
+        return self._is_best
+
+    @property
+    def is_early_stop(self):
+        return self._is_stop
+
+    @property
+    def not_improved_cnt(self):
+        return self._not_improved_cnt

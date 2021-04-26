@@ -6,8 +6,8 @@ from datetime import datetime
 from vit_pytorch.modules import ViT, build_head
 from vit_pytorch.data import create_loaders
 from vit_pytorch.configs import MODEL_CFGS
-from vit_pytorch.utils import set_seed, get_num_params, freeze_model, Meter, mkdir
-from vit_pytorch.solver import train_epoch, eval_epoch, get_criterion, get_optimizer, get_scheduler, WarmupScheduler
+from vit_pytorch.utils import set_seed, get_num_params, freeze_model, Meter, mkdir, save_model
+from vit_pytorch.solver import train_epoch, eval_epoch, get_criterion, get_optimizer, get_scheduler, WarmupScheduler, EarlyStopper
 
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -56,6 +56,11 @@ def main(args):
     warmup_scheduler = WarmupScheduler(optimizer, args.warmup)
     training_scheduler = get_scheduler(optimizer, args)
 
+    if args.patient is not None:
+        early_stopper = EarlyStopper(args.monitor, args.patient, args.min_delta)
+    else:
+        early_stopper = None 
+
     # init meters
     train_meter = Meter()
     valid_meter = Meter() if valid_loader is not None else None
@@ -77,34 +82,29 @@ def main(args):
 
     print('Start training.')
     for epoch in range(args.max_epoch):
-        train_epoch(model, train_loader, criterion, optimizer, train_meter, args.device, epoch + 1)
+        _meter_t = train_epoch(model, train_loader, criterion, optimizer, Meter(), args.device, epoch + 1)
+        train_meter.merge(_meter_t)
 
         if valid_loader is not None:
-            eval_epoch(model, valid_loader, criterion, valid_meter, args.device, epoch + 1)
+            _meter_v = eval_epoch(model, valid_loader, criterion, valid_meter, args.device, epoch + 1)
+            valid_meter.merge(_meter_v)
 
-        if valid_meter is not None:
-            if valid_meter['acc'][-1] > best_score:
-                print('Validation acc has improved from `%.6f` to `%.6f`' %(valid_meter['acc'][-1], best_score))
+        if valid_meter is not None and early_stopper is not None:
+            early_stopper.step(_meter_v[args.monitor])
+
+            if early_stopper.is_best and args.save_best:
                 weights_path = os.path.join(output_dir, 'improved_ep{}.pt'.format(str(epoch + 1)))
-                torch.save(model.state_dict(), weights_path)
-                best_score = valid_meter['acc'][-1]
-                not_improve_cnt = 0
+                save_model(model, weights_path)
             else:
-                not_improve_cnt += 1
-                print('No improved count : {}/{}'.format(not_improve_cnt, args.patient))
-        
-        if args.patient is not None:
-            if not_improve_cnt >= args.patient:
+                print('No improved count : {}/{}'.format(early_stopper.not_improved_cnt, args.patient))
+
+            if early_stopper.is_early_stop:
                 print('Early stop at epoch {}'.format(not_improve_cnt))
                 break
-                
+                        
     # save results 
-    try:
-        weights_path = os.path.join(output_dir, 'weights.pt')
-        torch.save(model.state_dict(), weights_path)
-        print('Successfully save weights to `{}`'.format(weights_path))
-    except Exception as e:
-        print(e)
+    weights_path = os.path.join(output_dir, 'weights.pt')
+    save_model(model, weights_path)
 
     try:
         train_hist_path = os.path.join(output_dir, 'train_history.pickle')
@@ -147,13 +147,15 @@ if __name__ == '__main__':
     argparser.add_argument('--beta2', type=float, help='Adam `betas` param 2.', default=0.999)   
     argparser.add_argument('--max_epoch', type=int, help='Maximun training epochs.', default=100)
     argparser.add_argument('--patient', type=int, help='Improved patient for early stopping', default=None)
+    argparser.add_argument('--monitor', type=str, help='Metric to be monitored', choices=['loss', 'acc'], default='loss')
+    argparser.add_argument('--min_delta', type=float, help='Minimum change in the monitored metric to qualify as an improvement', default=0.)
+    argparser.add_argument('--save_best', type=bool, help='Whether to save weights from the epoch with the best monitored metric', default=True)
     argparser.add_argument('--warmup', type=int, help='Warmup epochs.', default=0)
     argparser.add_argument('--scheduler', type=str, help='Training scheduler.', choices=['cosine, step, exp'], default=None)
     argparser.add_argument('--t_max', type=int, help='Maximum number of iterations (cosine).', default=None)
     argparser.add_argument('--eta_min', type=float, help='Minimum learning rate. (cosine)', default=0)
     argparser.add_argument('--step_size ', type=int, help=' Period of learning rate decay. (step)', default=None)
     argparser.add_argument('--gamma', type=float, help='Multiplicative factor of learning rate decay. (step/exp)', default=0.1)
-
 
     # augmentation
     argparser.add_argument('--image_size', type=int, help='Input image size.', default=384)

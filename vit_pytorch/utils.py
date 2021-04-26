@@ -31,6 +31,16 @@ def freeze_model(model):
     return None
 
 
+def save_model(model, path):
+    model.eval()
+    try:
+        torch.save(model.state_dict(), path)
+        print('Successfully save weights to `{}`'.format(path))
+    except Exception as e:
+        print(e)
+    return None 
+
+
 def to_numpy(tensor):
     return tensor.detach().cpu().numpy()
 
@@ -43,6 +53,9 @@ class Meter:
     def names(self):
         return [k for k in self._history.keys()]
 
+    def __getitem__(self, name):
+        return self._history[name]
+
     def update(self, updates):
         for key, val in updates.items():
             self._history[key].append(val)
@@ -52,5 +65,10 @@ class Meter:
     def reset(self):
         self._history = defaultdict(list)
 
-    def __getitem__(self, name):
-        return self._history[name]
+    def merge(self, meter):
+        assert self._history.keys() == meter._history.keys()
+
+        for key, val in self._history.items():
+            val += meter._history[key]
+
+        return 
