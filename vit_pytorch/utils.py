@@ -66,8 +66,6 @@ class Meter:
         self._history = defaultdict(list)
 
     def merge(self, meter):
-        assert self._history.keys() == meter._history.keys()
-
         for key, val in self._history.items():
             val += meter._history[key]
 
