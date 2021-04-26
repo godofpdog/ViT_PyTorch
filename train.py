@@ -2,6 +2,7 @@ import os
 import torch
 import pickle
 import argparse
+import numpy as np 
 from datetime import datetime
 from vit_pytorch.modules import ViT, build_head
 from vit_pytorch.data import create_loaders
