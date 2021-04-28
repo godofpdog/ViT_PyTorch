@@ -16,7 +16,7 @@ You can train ViT on your own dataset by following command :
 ```
 python train.py /train/data/folder/ --valid_dir /validation/data/folder/ --pretrained_weights /pre-trained/weights/path 
 ```
-Check out the Colab for loading preparing data, fine-tuning the model, and inference.
+Check out the Colab for preparing data, fine-tuning the model, and inference.
 
 https://colab.research.google.com/drive/1s6SMji0U4KzyEdhhoMRaHxxWNaqpsXBZ?authuser=2#scrollTo=yUHu-ilXL2--
 
