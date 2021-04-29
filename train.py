@@ -33,7 +33,7 @@ def main(args):
 
     if args.model_config in MODEL_CFGS:
         is_build_head = True 
-        model_config = MODEL_CFGS[args.model_name]
+        model_config = MODEL_CFGS[args.model_config]
     else:
         with open(args.model_config, 'r') as f:
             model_config = json.load(f)
