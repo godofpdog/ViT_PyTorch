@@ -121,7 +121,7 @@ def main(args):
     try:
         model_config_path = os.path.join(output_dir, 'model_config.json')
 
-        with open(model_config_path, 'w'): as f:
+        with open(model_config_path, 'w') as f:
             json.dump(model_config, f)
 
         print('Successfully save training history to `{}/`'.format(output_dir))
