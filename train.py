@@ -1,4 +1,5 @@
 import os 
+import json
 import torch
 import pickle
 import argparse
@@ -28,7 +29,15 @@ def main(args):
 
     # build model
     print('Build model.')
-    model_config = MODEL_CFGS[args.model_name]
+    is_build_head = False
+
+    if args.model_config in MODEL_CFGS:
+        is_build_head = True 
+        model_config = MODEL_CFGS[args.model_name]
+    else:
+        with open(args.model_config, 'r') as f:
+            model_config = json.load(f)
+
     model = ViT(**model_config)
 
     if args.pretrained_weights is not None:
@@ -44,7 +53,9 @@ def main(args):
     else:
         repr_dim = model_config['embed_dim']
 
-    model.head = build_head(repr_dim, num_classes)
+    if is_build_head:
+        model.head = build_head(repr_dim, num_classes)
+
     model.to(args.device)
 
     # get criterion
@@ -108,6 +119,17 @@ def main(args):
     save_model(model, weights_path)
 
     try:
+        model_config_path = os.path.join(output_dir, 'model_config.json')
+
+        with open(model_config_path, 'w'): as f:
+            json.dump(model_config, f)
+
+        print('Successfully save training history to `{}/`'.format(output_dir))
+
+    except Exception as e:
+        print(e)
+
+    try:
         train_hist_path = os.path.join(output_dir, 'train_history.pickle')
         valid_hist_path = os.path.join(output_dir, 'valid_history.pickle')
 
@@ -136,7 +158,7 @@ if __name__ == '__main__':
     argparser.add_argument('--output_dir', type=str, help='Output directory.', default=None)
 
     # model
-    argparser.add_argument('--model_name', type=str, help='Modle arch name.', default='B_16_384')
+    argparser.add_argument('--model_config', type=str, help='Modle arch configuration. (config path or arch name, e.g. "B_16_384")', default='B_16_384')
     argparser.add_argument('--pretrained_weights', type=str, help='Pre-trained weights filename.', default=None)
     argparser.add_argument('--freeze_extractor', type=bool, help='If True, freeze the feature extractor weights.', default=True)
     
@@ -152,10 +174,10 @@ if __name__ == '__main__':
     argparser.add_argument('--min_delta', type=float, help='Minimum change in the monitored metric to qualify as an improvement', default=0.)
     argparser.add_argument('--save_best', type=bool, help='Whether to save weights from the epoch with the best monitored metric', default=True)
     argparser.add_argument('--warmup', type=int, help='Warmup epochs.', default=0)
-    argparser.add_argument('--scheduler', type=str, help='Training scheduler.', choices=['cosine, step, exp'], default=None)
-    argparser.add_argument('--t_max', type=int, help='Maximum number of iterations (cosine).', default=None)
-    argparser.add_argument('--eta_min', type=float, help='Minimum learning rate. (cosine)', default=0)
-    argparser.add_argument('--step_size ', type=int, help=' Period of learning rate decay. (step)', default=None)
+    argparser.add_argument('--scheduler', type=str, help='Training scheduler.', choices=['cosine', 'step', 'exp'], default=None)
+    argparser.add_argument('--t_max', type=int, help='Maximum number of iterations (cosine).', default=10)
+    argparser.add_argument('--eta_min', type=float, help='Minimum learning rate. (cosine)', default=0.)
+    argparser.add_argument('--step_size ', type=int, help='Period of learning rate decay. (step)', default=10)
     argparser.add_argument('--gamma', type=float, help='Multiplicative factor of learning rate decay. (step/exp)', default=0.1)
 
     # augmentation
