@@ -58,6 +58,12 @@ def main(args):
 
     model.to(args.device)
 
+    # init meters
+    train_meter = Meter()
+
+    if valid_loader is not None:
+        valid_meter = Meter()
+
     # get criterion
     assert num_classes > 1
     loss = 'bce' if num_classes == 2 else 'ce'
@@ -72,10 +78,6 @@ def main(args):
         early_stopper = EarlyStopper(args.monitor, args.patient, args.min_delta)
     else:
         early_stopper = None 
-
-    # init meters
-    train_meter = Meter()
-    valid_meter = Meter() if valid_loader is not None else None
 
     # output dir
     output_dir = args.output_dir
@@ -98,7 +100,7 @@ def main(args):
         train_meter.merge(_meter_t)
 
         if valid_loader is not None:
-            _meter_v = eval_epoch(model, valid_loader, criterion, valid_meter, args.device, epoch + 1)
+            _meter_v = eval_epoch(model, valid_loader, criterion, Meter(), args.device, epoch + 1)
             valid_meter.merge(_meter_v)
 
         if valid_meter is not None and early_stopper is not None:

@@ -46,12 +46,13 @@ def train_epoch(model, loader, criterion, optimizer, meter, device, epoch):
         targets = targets.unsqueeze(-1)
         outputs = model(images)
         loss = criterion(outputs, targets)
+        loss_val = to_numpy(loss.item())[0]
         acc = calc_accuracy(outputs, targets)
         loss.backward()
         optimizer.step()
         optimizer.zero_grad()
-        _show_result(epoch, step, len(loader), loss.item(), acc, True)
-        _update_meter(meter, loss.item(), acc)
+        _show_result(epoch, step, len(loader), loss_val, acc, True)
+        _update_meter(meter, loss_val, acc)
 
     return meter 
 
@@ -68,9 +69,10 @@ def eval_epoch(model, loader, criterion, meter, device, epoch):
             targets = targets.unsqueeze(-1)
             outputs = model(images)
             loss = criterion(outputs, targets)
+            loss_val = to_numpy(loss.item())[0]
             acc = calc_accuracy(outputs, targets)
-            _show_result(epoch, step, len(loader), loss.item(), acc, False)
-            _update_meter(meter, loss.item(), acc)
+            _show_result(epoch, step, len(loader), loss_val, acc, False)
+            _update_meter(meter, loss_val, acc)
 
     return meter 
 

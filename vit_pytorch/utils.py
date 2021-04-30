@@ -68,9 +68,11 @@ class Meter:
         self._history = defaultdict(list)
 
     def merge(self, meter):
-        for key, val in self._history.items():
-            val += meter._history[key]
-
+        if len(self._history) == 0:
+            self._history = meter
+        else:
+            for key, val in self._history.items():
+                val += meter._history[key]
         return 
 
     def to_dataframe(self):
