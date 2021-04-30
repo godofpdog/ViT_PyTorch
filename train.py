@@ -130,17 +130,15 @@ def main(args):
         print(e)
 
     try:
-        train_hist_path = os.path.join(output_dir, 'train_history.pickle')
-        valid_hist_path = os.path.join(output_dir, 'valid_history.pickle')
-
-        with open(train_hist_path, 'wb') as f:
-            pickle.dump(train_meter, f, protocol=pickle.HIGHEST_PROTOCOL)
+        train_hist_path = os.path.join(output_dir, 'train_history.csv')
+        valid_hist_path = os.path.join(output_dir, 'valid_history.csv')
+        
+        train_meter.to_dataframe(train_hist_path)        
 
         if valid_meter is not None:
-            with open(valid_hist_path, 'wb') as f:
-                pickle.dump(valid_meter, f, protocol=pickle.HIGHEST_PROTOCOL)
+            valid_meter.to_dataframe(valid_hist_path)
 
-        print('Successfully save training history to `{}/`'.format(output_dir))
+        print('Successfully save training history to `{}/*`'.format(output_dir))
 
     except Exception as e:
         print(e)

@@ -3,6 +3,7 @@ import json
 import torch
 import random 
 import numpy as np 
+import pandas as pd 
 from collections import defaultdict
 
 
@@ -71,3 +72,6 @@ class Meter:
             val += meter._history[key]
 
         return 
+
+    def to_dataframe(self):
+        return pd.DataFrame(self._history)
