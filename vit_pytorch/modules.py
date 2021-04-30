@@ -12,7 +12,7 @@ class PatchEmbedding(nn.Module):
             Input image size.
         
         patch_size (int):
-            Patch size, input image will be splitted into (image_size // patch_size) ^ 2 patches.
+            Patch size, input image will be split into (image_size // patch_size) ^ 2 patches.
 
         in_channels (int):
             Input channel dimension (default = 3 for RGB).

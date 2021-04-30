@@ -133,10 +133,10 @@ def main(args):
         train_hist_path = os.path.join(output_dir, 'train_history.csv')
         valid_hist_path = os.path.join(output_dir, 'valid_history.csv')
         
-        train_meter.to_dataframe(train_hist_path)        
+        train_meter.to_dataframe().to_csv(train_hist_path)        
 
         if valid_meter is not None:
-            valid_meter.to_dataframe(valid_hist_path)
+            valid_meter.to_dataframe().to_csv(valid_hist_path)   
 
         print('Successfully save training history to `{}/*`'.format(output_dir))
 
