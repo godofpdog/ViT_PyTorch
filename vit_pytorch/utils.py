@@ -69,7 +69,7 @@ class Meter:
 
     def merge(self, meter):
         if len(self._history) == 0:
-            self._history = meter
+            self._history = meter._history
         else:
             for key, val in self._history.items():
                 val += meter._history[key]
