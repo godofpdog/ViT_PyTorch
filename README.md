@@ -9,14 +9,14 @@ This is a simple PyTorch implementation of Vision Transformer (ViT) described in
 ```
 python convert.py jax/weights/path/ converted/weights/path --model_name B_16_384
 ```
--  Or use the [converted PyTorch weights](https://drive.google.com/drive/u/2/folders/160hak04HM3XjmXo0HRb9YT1V2IUqMa90) directly.
+-  Or use the [converted PyTorch weights](https://drive.google.com/drive/folders/160hak04HM3XjmXo0HRb9YT1V2IUqMa90?usp=sharing) directly.
 
 ## Train ViT
 You can train ViT on your own dataset by following command : 
 ```
 python train.py /train/data/folder/ --valid_dir /validation/data/folder/ --pretrained_weights /pre-trained/weights/path 
 ```
-Check out the [Colab](https://colab.research.google.com/drive/1s6SMji0U4KzyEdhhoMRaHxxWNaqpsXBZ?authuser=2#scrollTo=yUHu-ilXL2--) for preparing data, fine-tuning the model, and inference.
+Check out the [Colab](https://colab.research.google.com/drive/1s6SMji0U4KzyEdhhoMRaHxxWNaqpsXBZ?usp=sharing) for preparing data, fine-tuning the model, and inference.
 
 ### Details about training arguments :
 Argument|Description|Type|Default
@@ -25,7 +25,7 @@ train_dir|Directory of training data.|str|required argument
 valid_dir|Directory of validation data.|str|None
 valid_rate|Proportion of validation sample split from training data.|float|None
 output_dir|Directory of output results where trained weights and training history will be stored.|str|None
-model_name|Model architecture name.|str|B_16_384
+model_config|Modle arch configuration. (config path or arch name, e.g. "B_16_384")|str|B_16_384
 pretrained_weights|Filename of pre-trained weights. Train from scratch if 'None'.|str|None
 freeze_extractor|If True, freeze the feature extractor weights to fine-tune the classification head.|bool|True
 batch_size|Batch size.|int|64
