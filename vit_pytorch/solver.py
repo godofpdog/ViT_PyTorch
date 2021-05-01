@@ -12,7 +12,7 @@ def calc_accuracy(outputs, targets):
     else:
         preds = outputs.argmax(-1)
 
-    return torch.mean(1. * (preds == targets)).cpu()
+    return torch.mean(1. * (preds == targets)).item()
 
 
 def get_criterion(loss):

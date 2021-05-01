@@ -68,6 +68,7 @@ class Meter:
         self._history = defaultdict(list)
 
     def merge(self, meter):
+        print(self._history)
         if len(self._history) == 0:
             self._history = meter._history
         else:
