@@ -97,11 +97,11 @@ def main(args):
     print('Start training.')
     for epoch in range(args.max_epoch):
         _meter_t = train_epoch(model, train_loader, criterion, optimizer, Meter(), args.device, epoch + 1)
-        train_meter.merge(_meter_t)
+        train_meter.update({'loss': np.mean(_meter_t['loss']), 'acc': np.mean(_meter_t['acc'])})
 
         if valid_loader is not None:
             _meter_v = eval_epoch(model, valid_loader, criterion, Meter(), args.device, epoch + 1)
-            valid_meter.merge(_meter_v)
+            valid_meter.update({'loss': np.mean(_meter_v['loss']), 'acc': np.mean(_meter_v['acc'])})
 
         if valid_meter is not None and early_stopper is not None:
             early_stopper.step(np.mean(_meter_v[args.monitor]))
@@ -135,10 +135,10 @@ def main(args):
         train_hist_path = os.path.join(output_dir, 'train_history.csv')
         valid_hist_path = os.path.join(output_dir, 'valid_history.csv')
         
-        train_meter.to_dataframe().to_csv(train_hist_path)        
+        train_meter.to_dataframe().to_csv(train_hist_path, index=False)        
 
         if valid_meter is not None:
-            valid_meter.to_dataframe().to_csv(valid_hist_path)   
+            valid_meter.to_dataframe().to_csv(valid_hist_path, index=False)   
 
         print('Successfully save training history to `{}/*`'.format(output_dir))
 
